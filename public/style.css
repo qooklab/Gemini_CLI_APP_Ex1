@@ -1,0 +1,129 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
+
+body {
+    font-family: 'Noto Sans KR', sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
+    margin: 0;
+    padding: 2rem;
+    background-color: #f4f7f6;
+    color: #333;
+}
+
+.container {
+    width: 100%;
+    max-width: 600px;
+    background: #fff;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+h1 {
+    text-align: center;
+    color: #2c3e50;
+    margin: 0;
+}
+
+p {
+    text-align: center;
+    color: #7f8c8d;
+    margin: 0;
+}
+
+textarea#inputText {
+    width: 100%;
+    min-height: 120px;
+    padding: 1rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 1rem;
+    resize: vertical;
+}
+
+.options label {
+    font-weight: 500;
+    color: #34495e;
+}
+
+.personas {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.persona-btn {
+    flex-grow: 1;
+    padding: 0.75rem;
+    border: 1px solid #bdc3c7;
+    background: #fff;
+    color: #34495e;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+}
+
+.persona-btn.active {
+    background: #3498db;
+    color: #fff;
+    border-color: #3498db;
+}
+
+button#convertBtn {
+    padding: 1rem;
+    background: #3498db;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    font-size: 1.1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s ease-in-out;
+}
+
+button#convertBtn:hover {
+    background: #2980b9;
+}
+
+.result-container {
+    border-top: 1px solid #eee;
+    padding-top: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.result-container h2 {
+    margin: 0;
+    color: #2c3e50;
+    font-size: 1.2rem;
+}
+
+#resultText {
+    background-color: #ecf0f1;
+    padding: 1rem;
+    border-radius: 4px;
+    min-height: 100px;
+    white-space: pre-wrap;
+    color: #333;
+}
+
+#copyBtn {
+    align-self: flex-end;
+    padding: 0.5rem 1rem;
+    border: 1px solid #bdc3c7;
+    background: #ecf0f1;
+    color: #2c3e50;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.2s ease-in-out;
+}
+
+#copyBtn:hover {
+    background: #dfe6e9;
+}

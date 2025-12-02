@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>업무 말투 변환기</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>업무 말투 변환기</h1>
+        <p>"하고 싶은 말은 있는데, 어떻게 격식 있게 표현해야 할지 모르겠다면?"</p>
+        
+        <textarea id="inputText" placeholder="변환할 문장의 핵심 내용을 입력하세요. (예: 이거 안 됨. 다시 해줘.)"></textarea>
+        
+        <div class="options">
+            <label>누구에게 보내는 메시지인가요?</label>
+            <div class="personas">
+                <button class="persona-btn active" data-persona="boss">상사</button>
+                <button class="persona-btn" data-persona="colleague">타팀 동료</button>
+                <button class="persona-btn" data-persona="client">고객</button>
+            </div>
+        </div>
+        
+        <button id="convertBtn">✨ 변환하기</button>
+        
+        <div class="result-container">
+            <h2>변환 결과</h2>
+            <div id="resultText"></div>
+            <button id="copyBtn">복사하기</button>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
