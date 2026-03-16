@@ -1,32 +1,16 @@
 import os
 import google.generativeai as genai
 import traceback
-from flask import Flask, request, jsonify
+import json
+import logging
 from firebase_functions import https_fn, options
 
-# --- Debug: Print all environment variables ---
-print("----- All Environment Variables -----")
-print(os.environ)
-print("---------------------------------")
-# --- End Debug ---
+# 로그 설정
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # 함수가 배포되는 리전을 설정합니다.
 options.set_global_options(region="asia-northeast3")
-
-from flask_cors import CORS
-
-app = Flask(__name__)
-CORS(app)
-
-# --- Gemini API 설정 ---
-# API 키를 환경 변수에서 직접 가져옵니다.
-GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
-if GEMINI_API_KEY:
-    genai.configure(api_key=GEMINI_API_KEY)
-    print("환경 변수에서 Gemini API 키를 성공적으로 설정했습니다.")
-else:
-    print("GEMINI_API_KEY 환경 변수가 설정되지 않았습니다. API를 사용할 수 없습니다.")
-# --- 설정 종료 ---
 
 def generate_prompt_for_gemini(original_text, persona):
     """Gemini 모델을 위한 상세하고 효과적인 프롬프트를 생성합니다."""
@@ -51,46 +35,74 @@ def generate_prompt_for_gemini(original_text, persona):
     """
     return prompt.strip()
 
-@app.route('/convert', methods=['POST'])
-def convert():
-    """Gemini API를 사용하여 텍스트 변환 요청을 처리합니다."""
-    if not GEMINI_API_KEY:
-        return jsonify({"error": "서버에 Gemini API 키가 설정되지 않았습니다. 관리자에게 문의하세요."}), 500
+@https_fn.on_request(secrets=["GEMINI_API_KEY"])
+def business_tone_converter(req: https_fn.Request) -> https_fn.Response:
+    """Flask 없이 Firebase Function 직접 호출을 처리합니다."""
+    headers = {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "POST, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type",
+    }
+
+    if req.method == "OPTIONS":
+        return https_fn.Response(status=204, headers=headers)
 
     try:
-        data = request.get_json()
-        if not data:
-            return jsonify({"error": "잘못된 JSON 형식입니다."}), 400
-
+        api_key = os.environ.get("GEMINI_API_KEY")
+        if not api_key:
+            return https_fn.Response(
+                json.dumps({"error": "API Key missing"}),
+                status=500, mimetype="application/json", headers=headers
+            )
+        
+        genai.configure(api_key=api_key)
+        
+        data = req.get_json()
         original_text = data.get('text')
         persona = data.get('persona', 'boss')
 
-        if not original_text or not original_text.strip():
-            return jsonify({"error": "변환할 텍스트 내용이 필요합니다."}), 400
+        # 모델 리스트 가져오기 (디버깅용)
+        available_models = []
+        try:
+            for m in genai.list_models():
+                if 'generateContent' in m.supported_generation_methods:
+                    available_models.append(m.name)
+        except Exception as le:
+            available_models = [f"Error listing models: {str(le)}"]
 
-        model = genai.GenerativeModel('gemini-1.5-flash-latest')
-        prompt = generate_prompt_for_gemini(original_text, persona)
+        # 시도할 모델 리스트 (Gemini 2.0 Flash 최우선)
+        model_names = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-1.5-flash-latest']
+        
+        last_exception = None
+        for m_name in model_names:
+            try:
+                logger.info(f"Attempting with model: {m_name}")
+                model = genai.GenerativeModel(m_name)
+                prompt = generate_prompt_for_gemini(original_text, persona)
+                response = model.generate_content(prompt)
+                
+                if response.parts:
+                    transformed_text = ''.join(part.text for part in response.parts)
+                    return https_fn.Response(
+                        json.dumps({"transformed_text": transformed_text.strip()}),
+                        mimetype="application/json", headers=headers
+                    )
+            except Exception as e:
+                logger.error(f"Failed with {m_name}: {str(e)}")
+                last_exception = e
+                continue
 
-        response = model.generate_content(prompt)
-
-        # 안전 장치 등으로 인해 응답에 텍스트가 없는 경우 처리
-        if response.parts:
-            transformed_text = ''.join(part.text for part in response.parts)
-        else:
-            transformed_text = "[AI 모델이 답변 생성을 거부했습니다. 입력 내용을 확인해주세요.]"
-            print(f"응답에 문제가 있습니다: {response.prompt_feedback}")
-
-        return jsonify({"transformed_text": transformed_text})
+        # 모든 시도가 실패한 경우
+        return https_fn.Response(
+            json.dumps({
+                "error": f"모든 모델 호출 실패: {str(last_exception)}",
+                "available_models": available_models
+            }),
+            status=500, mimetype="application/json", headers=headers
+        )
 
     except Exception as e:
-        print(f"Gemini API 호출 중 오류 발생: {e}")
-        print(traceback.format_exc()) # Add this line for traceback
-        return jsonify({"error": "AI 모델과 통신 중 내부 오류가 발생했습니다."}), 500
-
-
-
-@https_fn.on_request()
-def business_tone_converter(req: https_fn.Request) -> https_fn.Response:
-    """Flask 앱을 위한 Firebase Function 래퍼입니다."""
-    with app.request_context(req.environ):
-        return app.full_dispatch_request()
+        return https_fn.Response(
+            json.dumps({"error": str(e)}),
+            status=500, mimetype="application/json", headers=headers
+        )
