@@ -27,7 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
         resultText.innerText = '변환 중...';
 
         try {
-            const response = await fetch('https://business-tone-converter-nocq3sdxqq-du.a.run.app/convert', {
+            const response = await fetch('/convert', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

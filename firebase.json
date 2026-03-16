@@ -18,11 +18,12 @@
     ]
   },
   "functions": [
-    {
-      "source": "functions",
-      "runtime": "python312",
-      "codebase": "default",
-      "secrets": ["GEMINI_API_KEY"]
-    }
+        {
+          "source": "functions",
+          "runtime": "python312",
+          "codebase": "default",
+          "secretEnvironmentVariables": ["GEMINI_API_KEY"],
+          "entryPoint": "business_tone_converter"
+        }
   ]
 }
