@@ -70,8 +70,8 @@ def business_tone_converter(req: https_fn.Request) -> https_fn.Response:
         except Exception as le:
             available_models = [f"Error listing models: {str(le)}"]
 
-        # 시도할 모델 리스트 (Gemini 2.0 Flash 최우선)
-        model_names = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-1.5-flash-latest']
+        # 시도할 모델 리스트 (최신 안정화 모델 순서)
+        model_names = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-3.1-pro']
         
         last_exception = None
         for m_name in model_names:
